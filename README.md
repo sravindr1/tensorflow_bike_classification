@@ -30,7 +30,7 @@ unit(*relu*) activation functions followed by max pooling layers.The pooling lay
 size by factor 2 in both the image dimensions.The kernel size and strides of the Max pool function 
 (tf.nn.max_pool) can be changed to alter the max pool output dimension (By no chance you can increase the output 
 dimension compared to that of input).
-The output is flattened to be passed through a fully connected(fc) layer.The fc layer reduces inputs from 25*50*64 to
+The output is flattened to be passed through a fully connected(fc) layer.The fc layer reduces inputs from 25x50x64 to
 1024,relu activation followed.
 To regularize the model a drop out layer is added right before the output layer (which is also a fc layer).The rate of 
 passing the first fc layer node output is given by the keep_prob parameter of the drop out layer.The final fcn maps 1024
