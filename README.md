@@ -1,12 +1,12 @@
 # tensorflow_bike_classification
 
 This project aims at building a CNN to classify bike images into either road bike class or a mountain bike class.
-The project consists of two .py files
-1. train.py 
+The project consists of one train.py for training the CNN.
 
   * Load Images , label them and form dataset(train,test)
   * Build CNN model in tenforflow
   * Train CNN model for the train dataset and print train accuracy
+  * Test CNN model on the test set
 
 To run the train.py provide it with the data path of the directory containing the folders downloaded from 
 [this link](https://drive.google.com/drive/folders/1ywyfiAEI0ql81gMy58UeamWvV7u9xGn9?usp=sharing) .
@@ -36,9 +36,4 @@ To regularize the model a drop out layer is added right before the output layer 
 passing the first fc layer node output is given by the keep_prob parameter of the drop out layer.The final fcn maps 1024
 features to 2 features.The 2 feature value are the logits used in comparing the cost function in the training phase.
 
-
-
-2. test.py 
-  Test the model built in train.py and visualize test images with corresponding labels and confidende score produced .
-  
-to be completed...
+The prediction scores for the test set and the test labels are printed along with training and test accuracies for the bike dataset.  
