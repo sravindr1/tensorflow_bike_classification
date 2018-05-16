@@ -17,8 +17,8 @@ args = parser.parse_args()
 road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
 mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
 
-print('road bike', len(road_bikes))
-print('mountain bike', len(mountain_bikes))
+print('Number of road bike images = ', len(road_bikes))
+print('Number of road bike images = ', len(mountain_bikes))
 
 
 # To read images (gray scale and resized to (200,100)) ,
@@ -39,7 +39,7 @@ for i in range(len(road_bikes)):
 for i in range(len(mountain_bikes)):
     labels.extend((0, 1))
 labels = np.array(labels).reshape(len(road_bikes) + len(mountain_bikes), -1)
-print('Done labeling,road bike = (1,0) mountain bike = (0,1)')
+print('Done labeling,road bike label = (1,0) mountain bike label  = (0,1)')
 print('labels shape = ', labels.shape)
 
 # Create train and test Dataset
@@ -47,10 +47,10 @@ road_dataset = load_img_path(road_bikes)
 mountain_dataset = load_img_path(mountain_bikes)
 dataset = np.vstack((road_dataset, mountain_dataset))
 print('finished dataset loading, dataset shape = ', dataset.shape)
-
+print('Splitting dataset to training and testing dataset')
 # Split train and test data
 I_train, I_test, label_train, label_test = sklearn.model_selection.train_test_split(dataset,
-                                                                                    labels, test_size=0.4,
+                                                                                    labels, test_size=0.3,
                                                                                     shuffle=True, random_state=42)
 # n_classes = number of output class,
 # batch_size = batch size in used in training
@@ -123,6 +123,7 @@ def conv_net(x):
 
 # Train model
 def train_nn(x):
+
     # Predict labels on train set ,Calculate the mean cross-entropy loss(prediction,labels) = cost
     # Optimise minimum cost, using Adam optimizer, learning rate = 0.001 default
     with tf.name_scope('Training'):
@@ -133,13 +134,15 @@ def train_nn(x):
             optimizer = tf.train.AdamOptimizer().minimize(cost)
         # number of epochs
         epochs = 5
-
+        # Object to save model
+        saver = tf.train.Saver()
         # train_nn includes session run to compute loss and optimize min cost with input in batches of batch_size
         with tf.Session() as sess:
             # Initialize global variables within session
             sess.run(tf.global_variables_initializer())
             # Write graph in graphs file in the working directory
             writer = tf.summary.FileWriter('./graphs', sess.graph)
+
             # Train model epochs number of times
             for epoch in range(epochs):
                 epoch_loss = 0
@@ -163,15 +166,20 @@ def train_nn(x):
                 print('epoch', epoch+1, 'out of', epochs, 'loss', epoch_loss)
 
             # Compare the prediction and the labels, Accuracy = mean(number of correct prediction)
-            with tf.name_scope('Output'):
-                with tf.name_scope('Accuracy'):
-                    correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
-                    accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+            correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+            print('Training accuracy', accuracy.eval({x: I_train, y: label_train}))
+            # Save model
+            saver.save(sess, '/home/sarala/PycharmProjects/P1/C/train_model/save_net.ckpt')
 
+            # Testing part as i could not successfully restore the model onto another file I write the test code
+            # in the same file train.py
+            print('test scores',sess.run(tf.nn.softmax(prediction), feed_dict={x: I_test}))
+            print('test label', label_test)
+            correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+            print('Testing accuracy', accuracy.eval({x: I_test, y: label_test}))
 
-            print('Accuracy', accuracy.eval({x: I_train, y: label_train}))
-                # print(sess.run(prediction, feed_dict={x: I_t}))
         writer.close()
 
 train_nn(x)
-
