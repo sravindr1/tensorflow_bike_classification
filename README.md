@@ -41,4 +41,4 @@ features to 2 features.The 2 feature value are the logits used in comparing the 
 2. test.py 
   Test the model built in train.py and visualize test images with corresponding labels and confidende score produced .
   
-The dataset is loaded 
+to be completed...
