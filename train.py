@@ -172,8 +172,9 @@ def train_nn(x):
             # Save model
             saver.save(sess, '/home/sarala/PycharmProjects/P1/C/train_model/save_net.ckpt')
 
-            # Testing part as i could not successfully restore the model onto another file I write the test code
-            # in the same file train.py
+            # Testing part : As I could not successfully restore the model onto another file I write the test code
+            # in the same file train.py also my confidence scores are in the extremes of 1 and 0 so they look like predicted 
+            # labels
             print('test scores',sess.run(tf.nn.softmax(prediction), feed_dict={x: I_test}))
             print('test label', label_test)
             correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
