@@ -7,15 +7,15 @@ import sklearn.model_selection
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("da", help="Provide data path of the directory containing road_bikes and mountain_bikes folders ")
+parser.add_argument("dir_path", help="Provide data path of the directory containing road_bikes and mountain_bikes folders ")
 args = parser.parse_args()
 
 # Read Dataset
 # road_bikes = glob.glob("/home/sarala/Downloads/Dataset_bikes/road_bikes/*.jpg")
 # mountain_bikes = glob.glob("/home/sarala/Downloads/Dataset_bikes/mountain_bikes/*.jpg")
 
-road_bikes = glob.glob(args.da +"/road_bikes/*.jpg")
-mountain_bikes = glob.glob(args.da + "/mountain_bikes/*.jpg")
+road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
+mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
 
 print('road bike', len(road_bikes))
 print('mountain bike', len(mountain_bikes))
