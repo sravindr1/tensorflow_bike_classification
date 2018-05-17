@@ -1,5 +1,3 @@
-##Loading dataset and build model as done in train.py
-
 # Import necessary modules
 import tensorflow as tf
 import cv2
@@ -7,20 +5,19 @@ import glob
 import numpy as np
 import sklearn.model_selection
 from sklearn.preprocessing import MinMaxScaler
-# from matplotlib import pyplot
 
-# import argparse
-# parser = argparse.ArgumentParser()
-# parser.add_argument("dir_path", help="Provide data path of the directory containing road_bikes and mountain_bikes folders ")
-# args = parser.parse_args()
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("dir_path", help="Provide data path of the directory containing road_bikes and mountain_bikes folders ")
+args = parser.parse_args()
 
 # Load dataset
 # Read Dataset
-road_bikes = glob.glob("/home/sarala/Downloads/Dataset_bikes/road_bikes/*.jpg")
-mountain_bikes = glob.glob("/home/sarala/Downloads/Dataset_bikes/mountain_bikes/*.jpg")
+# road_bikes = glob.glob("/home/sarala/PycharmProjects/P1/bikes/road_bikes/*.jpg")
+# mountain_bikes = glob.glob("/home/sarala/PycharmProjects/P1/bikes/mountain_bikes/*.jpg")
 
-# road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
-# mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
+road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
+mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
 
 print('Number of road bike images = ', len(road_bikes))
 print('Number of road bike images = ', len(mountain_bikes))
@@ -55,10 +52,9 @@ print('finished dataset loading, dataset shape = ', dataset.shape)
 print('Splitting dataset to training and testing dataset')
 # Split train and test data
 I_train, I_test, label_train, label_test = sklearn.model_selection.train_test_split(dataset,
-                                                                                    labels, test_size=0.3,
+                                                                                    labels, test_size=0.15,
                                                                                     shuffle=True, random_state=42)
 # Scale data
-
 image_scaler = MinMaxScaler(feature_range=(0, 1))
 
 # Scale both the training and testing
@@ -66,8 +62,12 @@ I_train = image_scaler.fit_transform(I_train)
 # It's very important that the training and test data are scaled with the same scaler.
 I_test = image_scaler.transform(I_test)
 
+# Build model
 # Define model parameters
 learning_rate = 0.001
+training_epochs = 150
+batch_size = 40
+print_every_step = 10
 
 # Define how many inputs and outputs are in our neural network
 number_of_inputs = 200*100
@@ -79,6 +79,10 @@ layer_2_nodes = 64
 layer_3_nodes = 1024
 drop_layer_keep_rate = 0.8 # layer 4 drop out
 
+# Section One: Define the layers of the neural network itself
+
+# Define functions to be used in convolutional neural network
+# convolutional layer stride =[1,1,1,1] and output size same as input
 def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
@@ -89,7 +93,7 @@ def maxpool2d(x):
 
 # Input Layer
 with tf.variable_scope('input'):
-    X = tf.placeholder(tf.float32, shape=([None, 100, 200, 1]))
+    X = tf.placeholder(tf.float32, shape=([None, 100,200,1]))
 
 # Layer 1 conv2d-->relu-->maxpool
 with tf.variable_scope('layer_1'):
@@ -130,34 +134,56 @@ with tf.variable_scope('cost'):
 with tf.variable_scope('train'):
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
+
 # To save model graph
 saver = tf.train.Saver()
 # Initialize a session so that we can run TensorFlow operations
 with tf.Session() as session:
 
-    saver.restore(session, 'logs/trained_model.ckpt')
+    # Run the global variable initializer to initialize all variables and layers of the neural network
+    session.run(tf.global_variables_initializer())
+
     # Run the optimizer over and over to train the network.
     # One epoch is one full run through the training data set.
-    # prediction = tf.nn.log_softmax(cost)
-    I_test = np.reshape(I_test, (-1, 100, 200, 1))
-    predicted_label = session.run(tf.nn.softmax(prediction), feed_dict={X: I_test})
+    for epoch in range(training_epochs):
+
+        # Feed in the training data and do one step of neural network training
+        # session.run(optimizer, feed_dict={X: I_train, Y: label_train})
+        # Batch training
+        epoch_loss = 0
+        # Index to keep track of input
+
+        i = 0
+        while i < len(I_train):
+            start = i
+            end = i + batch_size
+
+            # Define batch input and corresponding batch labels to train the model
+            # Run the cost and optimizer function on graph, keeping track of loss for every batch of training,
+            # update input index
+            batch_x = np.array(I_train[start:end])
+            batch_x = np.reshape(batch_x, (-1, 100, 200, 1))
+            batch_y = np.array(label_train[start:end])
+            _, training_cost = session.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y})
+            epoch_loss += training_cost
+            i += batch_size
+
+        # Print the current training status to the screen
+        if epoch % print_every_step == 0:
+
+            print('Epoch = {}, Training loss = {} '.format(epoch+1, epoch_loss))
+
+    # Training is now complete!
+    print("Training complete!")
 
     # Compare the prediction and the labels, Accuracy = mean(number of correct prediction)
-    correct = tf.equal(tf.argmax(predicted_label, 1), tf.argmax(Y, 1))
+    correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
-    print('Testing accuracy', accuracy.eval({X: I_test, Y: label_test}))
+    I_train = np.reshape(I_train,(-1,100,200,1))
+    print('Training accuracy', accuracy.eval({X: I_train, Y: label_train}))
 
-
-print('Predicted labels = {}'.format(predicted_label))
-print('labels',label_test)
-
-# I_test = np.reshape(I_test,(100,200))
-# fig = plt.figure(figsize=(25, 4))
-# for i in np.arange(len(label_test)):
-#     ax = fig.add_subplot(2, len(label_test)/2, i+1, xticks=[], yticks=[])
-#     ax.imshow(np.squeeze(I_test[i]), cmap='gray')
-#     ax.set_title("{} ({})".format(predicted_label[i,:], label_test[i,:]),
-#                  color=("green" if predicted_label[i]==label_test[i] else "red"))
-
+    # Save model
+    save_path = saver.save(session, 'logs/trained_model.ckpt')
+    print('Model saved {}'.format(save_path))
 
 
