@@ -1,5 +1,8 @@
 # tensorflow_bike_classification
 
+* To run train.py use command **python train.py /path/to/dataset/directory** in the terminal
+* To run test.py use command **python test.py /path/to/dataset/directory** in the terminal
+
 This project aims at building a CNN to classify bike images into either road bike class or a mountain bike class.
 The project consists of one train.py for training the CNN.
 
