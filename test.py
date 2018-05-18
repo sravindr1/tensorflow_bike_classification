@@ -131,7 +131,7 @@ print('CNN model architecture defined as in train.py')
 saver = tf.train.Saver()
 # Initialize a session so that we can run TensorFlow operations
 with tf.Session() as session:
-
+    # Restore model
     saver.restore(session, 'logs/trained_model.ckpt')
     print('Trained model parameters loaded onto test.py')
 
