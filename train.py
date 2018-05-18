@@ -6,18 +6,18 @@ import numpy as np
 import sklearn.model_selection
 from sklearn.preprocessing import MinMaxScaler
 
-# import argparse
-# parser = argparse.ArgumentParser()
-# parser.add_argument("dir_path", help="Provide data path of the directory containing road_bikes and mountain_bikes folders ")
-# args = parser.parse_args()
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("dir_path", help="Provide data path of the directory containing road_bikes and mountain_bikes folders ")
+args = parser.parse_args()
 
 # Load dataset
-# Read Dataset
-road_bikes = glob.glob("/home/sarala/PycharmProjects/P1/bikes/road_bikes/*.jpg")
-mountain_bikes = glob.glob("/home/sarala/PycharmProjects/P1/bikes/mountain_bikes/*.jpg")
+# # Read Dataset
+# road_bikes = glob.glob("/home/sarala/PycharmProjects/P1/bikes/road_bikes/*.jpg")
+# mountain_bikes = glob.glob("/home/sarala/PycharmProjects/P1/bikes/mountain_bikes/*.jpg")
 
-# road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
-# mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
+road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
+mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
 
 print('Number of road bike images = ', len(road_bikes))
 print('Number of road bike images = ', len(mountain_bikes))
@@ -42,18 +42,17 @@ for i in range(len(mountain_bikes)):
     labels.extend((0, 1))
 labels = np.array(labels).reshape(len(road_bikes) + len(mountain_bikes), -1)
 print('Done labeling,road bike label = (1,0) mountain bike label  = (0,1)')
-print('labels shape = ', labels.shape)
 
 # Create train and test Dataset
 road_dataset = load_img_path(road_bikes)
 mountain_dataset = load_img_path(mountain_bikes)
 dataset = np.vstack((road_dataset, mountain_dataset))
 print('finished dataset loading, dataset shape = ', dataset.shape)
-print('Splitting dataset to training and testing dataset')
+print('Splitting dataset into training and testing dataset')
 # Split train and test data
 I_train, I_test, label_train, label_test = sklearn.model_selection.train_test_split(dataset,
-                                                                                    labels, test_size=0.15,
-                                                                                    shuffle=True, random_state=42)
+                                    labels, test_size=0.15, shuffle=True, random_state=42)
+print('Scale datasets')
 # Scale data
 image_scaler = MinMaxScaler(feature_range=(0, 1))
 
@@ -65,8 +64,8 @@ I_test = image_scaler.transform(I_test)
 # Build model
 # Define model parameters
 learning_rate = 0.001
-training_epochs = 75
-batch_size = 20
+training_epochs = 10
+batch_size = 40
 print_every_step = 5
 
 # Define how many inputs and outputs are in our neural network
@@ -165,6 +164,10 @@ with tf.Session() as session:
             batch_x = np.array(I_train[start:end])
             batch_x = np.reshape(batch_x, (-1, 100, 200, 1))
             batch_y = np.array(label_train[start:end])
+            # Log file writers
+            # writer = tf.summary.FileWriter("./comp_graph", session.graph)
+            # training_writer = tf.summary.FileWriter('./logs/training', session.graph)
+
             _, training_cost = session.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y})
             epoch_loss += training_cost
             i += batch_size
