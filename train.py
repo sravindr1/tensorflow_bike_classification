@@ -136,7 +136,7 @@ with tf.variable_scope('train'):
 
 # To save model graph
 saver = tf.train.Saver()
-# writer = tf.Summary.graph()
+
 # Initialize a session so that we can run TensorFlow operations
 with tf.Session() as session:
 
@@ -144,7 +144,7 @@ with tf.Session() as session:
     session.run(tf.global_variables_initializer())
 
     # Write graph in graphs file in the working directory
-    writer = tf.summary.FileWriter('/home/sarala/PycharmProjects/P1/graphs', session.graph)
+    writer = tf.summary.FileWriter('./graphs', session.graph)
 
     # One epoch is one full run through the training data set.
     for epoch in range(training_epochs):
@@ -164,10 +164,6 @@ with tf.Session() as session:
             batch_x = np.array(I_train[start:end])
             batch_x = np.reshape(batch_x, (-1, 100, 200, 1))
             batch_y = np.array(label_train[start:end])
-            # Log file writers
-            # writer = tf.summary.FileWriter("./comp_graph", session.graph)
-            # training_writer = tf.summary.FileWriter('./logs/training', session.graph)
-
             _, training_cost = session.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y})
             epoch_loss += training_cost
             i += batch_size
