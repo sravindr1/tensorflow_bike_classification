@@ -1,10 +1,14 @@
-# Import necessary modules
-import tensorflow as tf
-import cv2
+##Loading dataset and build model as done in train.py
+
 import glob
+
+import cv2
 import numpy as np
 import sklearn.model_selection
+# Import necessary modules
+import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -18,9 +22,6 @@ args = parser.parse_args()
 
 road_bikes = glob.glob(args.dir_path +"/road_bikes/*.jpg")
 mountain_bikes = glob.glob(args.dir_path + "/mountain_bikes/*.jpg")
-
-print('Number of road bike images = ', len(road_bikes))
-print('Number of road bike images = ', len(mountain_bikes))
 
 
 # To read images (gray scale and resized to (200,100)) ,
@@ -41,20 +42,18 @@ for i in range(len(road_bikes)):
 for i in range(len(mountain_bikes)):
     labels.extend((0, 1))
 labels = np.array(labels).reshape(len(road_bikes) + len(mountain_bikes), -1)
-print('Done labeling,road bike label = (1,0) mountain bike label  = (0,1)')
-print('labels shape = ', labels.shape)
 
 # Create train and test Dataset
 road_dataset = load_img_path(road_bikes)
 mountain_dataset = load_img_path(mountain_bikes)
 dataset = np.vstack((road_dataset, mountain_dataset))
-print('finished dataset loading, dataset shape = ', dataset.shape)
-print('Splitting dataset to training and testing dataset')
+
 # Split train and test data
 I_train, I_test, label_train, label_test = sklearn.model_selection.train_test_split(dataset,
                                                                                     labels, test_size=0.15,
                                                                                     shuffle=True, random_state=42)
 # Scale data
+
 image_scaler = MinMaxScaler(feature_range=(0, 1))
 
 # Scale both the training and testing
@@ -62,12 +61,10 @@ I_train = image_scaler.fit_transform(I_train)
 # It's very important that the training and test data are scaled with the same scaler.
 I_test = image_scaler.transform(I_test)
 
-# Build model
+print('Data loaded and transformed as in train.py')
+
 # Define model parameters
 learning_rate = 0.001
-training_epochs = 150
-batch_size = 40
-print_every_step = 10
 
 # Define how many inputs and outputs are in our neural network
 number_of_inputs = 200*100
@@ -79,10 +76,6 @@ layer_2_nodes = 64
 layer_3_nodes = 1024
 drop_layer_keep_rate = 0.8 # layer 4 drop out
 
-# Section One: Define the layers of the neural network itself
-
-# Define functions to be used in convolutional neural network
-# convolutional layer stride =[1,1,1,1] and output size same as input
 def conv2d(x, W):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
 
@@ -93,7 +86,7 @@ def maxpool2d(x):
 
 # Input Layer
 with tf.variable_scope('input'):
-    X = tf.placeholder(tf.float32, shape=([None, 100,200,1]))
+    X = tf.placeholder(tf.float32, shape=([None, 100, 200, 1]))
 
 # Layer 1 conv2d-->relu-->maxpool
 with tf.variable_scope('layer_1'):
@@ -133,57 +126,39 @@ with tf.variable_scope('cost'):
 
 with tf.variable_scope('train'):
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
-
-
+print('CNN model architecture defined as in train.py')
 # To save model graph
 saver = tf.train.Saver()
 # Initialize a session so that we can run TensorFlow operations
 with tf.Session() as session:
 
-    # Run the global variable initializer to initialize all variables and layers of the neural network
-    session.run(tf.global_variables_initializer())
+    saver.restore(session, 'logs/trained_model.ckpt')
+    print('Trained model parameters loaded onto test.py')
 
     # Run the optimizer over and over to train the network.
     # One epoch is one full run through the training data set.
-    for epoch in range(training_epochs):
-
-        # Feed in the training data and do one step of neural network training
-        # session.run(optimizer, feed_dict={X: I_train, Y: label_train})
-        # Batch training
-        epoch_loss = 0
-        # Index to keep track of input
-
-        i = 0
-        while i < len(I_train):
-            start = i
-            end = i + batch_size
-
-            # Define batch input and corresponding batch labels to train the model
-            # Run the cost and optimizer function on graph, keeping track of loss for every batch of training,
-            # update input index
-            batch_x = np.array(I_train[start:end])
-            batch_x = np.reshape(batch_x, (-1, 100, 200, 1))
-            batch_y = np.array(label_train[start:end])
-            _, training_cost = session.run([optimizer, cost], feed_dict={X: batch_x, Y: batch_y})
-            epoch_loss += training_cost
-            i += batch_size
-
-        # Print the current training status to the screen
-        if epoch % print_every_step == 0:
-
-            print('Epoch = {}, Training loss = {} '.format(epoch+1, epoch_loss))
-
-    # Training is now complete!
-    print("Training complete!")
+    I_test = np.reshape(I_test, (-1, 100, 200, 1))
+    predicted_label = session.run(tf.nn.softmax(prediction), feed_dict={X: I_test})
 
     # Compare the prediction and the labels, Accuracy = mean(number of correct prediction)
-    correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(Y, 1))
+    correct = tf.equal(tf.argmax(predicted_label, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
-    I_train = np.reshape(I_train,(-1,100,200,1))
-    print('Training accuracy', accuracy.eval({X: I_train, Y: label_train}))
+    print('Testing accuracy', accuracy.eval({X: I_test, Y: label_test}))
 
-    # Save model
-    save_path = saver.save(session, 'logs/trained_model.ckpt')
-    print('Model saved {}'.format(save_path))
+# print('Predicted labels = {}'.format(predicted_label))
+# print('labels',label_test)
 
+# Display test images with preiction scores and confidence level
 
+fig = plt.figure(figsize=(50, 100))
+if len(predicted_label) % 3 ==0 :
+    num_img_row = 3
+else :
+    num_img_row = 4
+for i in np.arange(len(I_test)):
+    ax = fig.add_subplot(int((len(predicted_label))/num_img_row), num_img_row, i+1, xticks=[], yticks=[])
+    ax.imshow(I_test[i,:,:], cmap='gray')
+    ax.set_title("Confidence score(prediction) - {},Actual label = {})".format(predicted_label[i], label_test[i]),
+                 color=("green" if np.argmax(predicted_label[i])== np.argmax(label_test[i]) else "red"))
+# save figure
+plt.savefig('a.png')
