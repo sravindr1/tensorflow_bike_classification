@@ -1,4 +1,7 @@
-##Loading dataset and build model as done in train.py
+# To run test.py: python test.py /path/to/dataset/directory
+
+
+#Loading dataset and build model as done in train.py
 
 import glob
 
@@ -8,7 +11,7 @@ import sklearn.model_selection
 # Import necessary modules
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import argparse
 parser = argparse.ArgumentParser()
