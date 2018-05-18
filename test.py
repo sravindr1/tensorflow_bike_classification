@@ -8,7 +8,7 @@ import sklearn.model_selection
 # Import necessary modules
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -131,34 +131,40 @@ print('CNN model architecture defined as in train.py')
 saver = tf.train.Saver()
 # Initialize a session so that we can run TensorFlow operations
 with tf.Session() as session:
-    # Restore model
+
     saver.restore(session, 'logs/trained_model.ckpt')
     print('Trained model parameters loaded onto test.py')
 
     # Run the optimizer over and over to train the network.
     # One epoch is one full run through the training data set.
     I_test = np.reshape(I_test, (-1, 100, 200, 1))
-    predicted_label = session.run(tf.nn.softmax(prediction), feed_dict={X: I_test})
+    predicted_score = session.run(tf.nn.softmax(prediction), feed_dict={X: I_test})
 
     # Compare the prediction and the labels, Accuracy = mean(number of correct prediction)
-    correct = tf.equal(tf.argmax(predicted_label, 1), tf.argmax(Y, 1))
+    correct = tf.equal(tf.argmax(predicted_score, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
     print('Testing accuracy', accuracy.eval({X: I_test, Y: label_test}))
 
-# print('Predicted labels = {}'.format(predicted_label))
+# print('Predicted scores = {}'.format(predicted_score))
 # print('labels',label_test)
 
 # Display test images with preiction scores and confidence level
-
 fig = plt.figure(figsize=(50, 100))
-if len(predicted_label) % 3 ==0 :
+if len(predicted_score) % 3 == 0:
     num_img_row = 3
-else :
-    num_img_row = 4
-for i in np.arange(len(I_test)):
-    ax = fig.add_subplot(int((len(predicted_label))/num_img_row), num_img_row, i+1, xticks=[], yticks=[])
-    ax.imshow(I_test[i,:,:], cmap='gray')
-    ax.set_title("Confidence score(prediction) - {},Actual label = {})".format(predicted_label[i], label_test[i]),
-                 color=("green" if np.argmax(predicted_label[i])== np.argmax(label_test[i]) else "red"))
-# save figure
+elif len(predicted_score) % 5 == 0:
+    num_img_row = 5
+elif len(predicted_score) % 7 == 0:
+    num_img_row = 7
+elif len(predicted_score) % 2 == 0:
+    num_img_row = 2
+elif len(predicted_score) % 1 == 0:
+    num_img_row = 1
+
+for i in np.arange(len(I_test) - 1):
+    ax = fig.add_subplot(int((len(predicted_score)) / num_img_row), num_img_row, i + 1, xticks=[], yticks=[])
+    ax.imshow(I_test[i, :, :], cmap='gray')
+    ax.set_title("Confidence score - {},Actual label = {})".format(predicted_score[i], label_test[i]),
+                 color=("green" if np.argmax(predicted_score[i]) == np.argmax(label_test[i]) else "red"))
+
 plt.savefig('a.png')
