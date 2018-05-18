@@ -44,3 +44,5 @@ The model variables weights and biases of the trained model is saved in a .ckpt 
 In the test.py file the model variables saved are loaded and the prediction and confidence on the test images is calculated and displayed.An output image for test size of 0.3 is in this repository along with the tensorboard graph of the model built.
 
 Changes in the model architecture, training batch size, epochs etcetera can be made to produce better results.
+
+One of the classification results displaying confidence scores on the prediction and actual test label are shown below.![alt text](test_output_image.png)
