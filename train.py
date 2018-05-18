@@ -65,9 +65,9 @@ I_test = image_scaler.transform(I_test)
 # Build model
 # Define model parameters
 learning_rate = 0.001
-training_epochs = 150
-batch_size = 40
-print_every_step = 10
+training_epochs = 75
+batch_size = 20
+print_every_step = 5
 
 # Define how many inputs and outputs are in our neural network
 number_of_inputs = 200*100
@@ -137,19 +137,21 @@ with tf.variable_scope('train'):
 
 # To save model graph
 saver = tf.train.Saver()
+# writer = tf.Summary.graph()
 # Initialize a session so that we can run TensorFlow operations
 with tf.Session() as session:
 
     # Run the global variable initializer to initialize all variables and layers of the neural network
     session.run(tf.global_variables_initializer())
 
-    # Run the optimizer over and over to train the network.
+    # Write graph in graphs file in the working directory
+    writer = tf.summary.FileWriter('/home/sarala/PycharmProjects/P1/graphs', session.graph)
+
     # One epoch is one full run through the training data set.
     for epoch in range(training_epochs):
-
         # Feed in the training data and do one epoch of neural network training
         epoch_loss = 0
-        
+
         # Batch training
         # Index to keep track of input
         i = 0
@@ -171,6 +173,8 @@ with tf.Session() as session:
         if epoch % print_every_step == 0:
 
             print('Epoch = {}, Training loss = {} '.format(epoch+1, epoch_loss))
+
+
 
     # Training is now complete!
     print("Training complete!")
